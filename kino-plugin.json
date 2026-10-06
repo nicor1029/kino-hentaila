@@ -1,19 +1,21 @@
 {
   "id": "hentaila-es",
   "name": "Hentai sub español",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "apiVersion": 6,
   "entry": "plugin.js",
   "description": "Hentai subtitulado al español de hentaila.com. Solo para mayores de 18 años: se ve con el código +18 de Kino desbloqueado. No pide cuenta ni configuración.",
   "author": "Nicor1029",
   "homepage": "https://github.com/Nicor1029/kino-hentaila",
+  "icon": "https://raw.githubusercontent.com/Nicor1029/kino-hentaila/main/icon.png",
   "hosts": [
     "hentaila.com",
     "*.hentaila.com",
     "mp4upload.com",
     "*.mp4upload.com",
     "yourupload.com",
-    "*.yourupload.com"
+    "*.yourupload.com",
+    "raw.githubusercontent.com"
   ],
   "streamHosts": "any",
   "capabilities": [
