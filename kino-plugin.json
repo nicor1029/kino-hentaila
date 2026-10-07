@@ -1,7 +1,7 @@
 {
   "id": "hentaila-es",
   "name": "Hentai sub español",
-  "version": "1.0.2",
+  "version": "1.0.0",
   "apiVersion": 6,
   "entry": "plugin.js",
   "icon": "icon.png",
@@ -17,20 +17,6 @@
     "*.yourupload.com"
   ],
   "streamHosts": "any",
-  "capabilities": [
-    "search",
-    "home",
-    "browse",
-    "episodes",
-    "resolve",
-    "download"
-  ],
-  "categories": [
-    "anime",
-    "adult"
-  ],
-  "signature": {
-    "authorKey": "71573c60369c35254b365607723542f8014f016b99e6e4c334530ad3df066191",
-    "value": "7cf4f55649c971d28582ff3840243a5528bcb86838051832c3df540947ff2902054a91011ef52325b6d54648290dac522d87866c1b5f87bfd8fe9f7723751202"
-  }
+  "capabilities": ["search", "home", "browse", "episodes", "resolve", "download"],
+  "categories": ["anime", "adult"]
 }
