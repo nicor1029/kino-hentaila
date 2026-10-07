@@ -1,6 +1,6 @@
 const BASE = "https://hentaila.com";
 const UA = "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36";
-const BLOCKED_GENRES = ["shota", "loli"];
+const BLOCKED_GENRES = ["shota", "loli", "petit"];
 const SERVERS = ["MP4Upload", "YourUpload"];
 const MAX_GENRE_PAGES = 20;
 
@@ -66,7 +66,7 @@ async function genreSlugs(genre, baseKey) {
 async function blockedSet() {
   let slugs = null;
   try {
-    const c = await kino.storage.get("blk:v2");
+    const c = await kino.storage.get("blk:v3");
     const raw = c && typeof c === "object" && "value" in c ? c.value : c;
     if (typeof raw === "string") {
       const arr = JSON.parse(raw);
@@ -78,7 +78,7 @@ async function blockedSet() {
     const baseKey = parseCards(baseHtml).map((c) => c.slug).sort().join(",");
     const lists = await Promise.all(BLOCKED_GENRES.map((g) => genreSlugs(g, baseKey)));
     slugs = [].concat(...lists);
-    try { await kino.storage.set("blk:v2", JSON.stringify(slugs), { ttlMs: 12 * 3600 * 1000 }); } catch (e) {}
+    try { await kino.storage.set("blk:v3", JSON.stringify(slugs), { ttlMs: 12 * 3600 * 1000 }); } catch (e) {}
   }
   const set = {};
   for (const x of slugs) set[x] = true;
@@ -100,9 +100,24 @@ export async function home() {
   return [{ id: "nuevos", title: "Recién agregados", ref: "nuevos", items: items }];
 }
 
+const CATEGORIES = [
+  ["vanilla", "Vanilla"], ["romance", "Romance"], ["ecchi", "Ecchi"], ["softcore", "Softcore"],
+  ["harem", "Harem"], ["yuri", "Yuri"], ["yaoi", "Yaoi"], ["futanari", "Futanari"],
+  ["3d", "3D"], ["milfs", "Milfs"], ["casadas", "Casadas"], ["maids", "Maids"],
+  ["enfermeras", "Enfermeras"], ["teacher", "Teacher"], ["gal", "Gal"], ["elfas", "Elfas"],
+  ["succubus", "Succubus"], ["tetonas", "Tetonas"], ["paizuri", "Paizuri"], ["threesome", "Threesome"],
+  ["orgias", "Orgías"], ["hardcore", "Hardcore"], ["anal", "Anal"], ["bondage", "Bondage"],
+];
+export async function categories() {
+  return CATEGORIES.map((c) => ({ id: "g-" + c[0], title: c[1], ref: "g:" + c[0], adult: true }));
+}
+
 export async function browse(ref, cursor) {
   const page = cursor ? Number(cursor) || 1 : 1;
-  const [html, blk] = await Promise.all([getText(BASE + "/catalogo?page=" + page), blockedSet()]);
+  const r = String(ref);
+  const genre = r.indexOf("g:") === 0 ? r.slice(2).replace(/[^a-z0-9-]/g, "") : "";
+  const url = genre ? BASE + "/catalogo?genre=" + genre + "&page=" + page : BASE + "/catalogo?page=" + page;
+  const [html, blk] = await Promise.all([getText(url), blockedSet()]);
   const items = parseCards(html).filter((c) => !blk[c.slug]).map(toItem);
   const more = new RegExp("[?&]page=" + (page + 1) + "(?!\\d)").test(html);
   return more ? { items: items, next: String(page + 1) } : { items: items };

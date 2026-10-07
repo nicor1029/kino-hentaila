@@ -1,9 +1,10 @@
 // Pruebas sin conexión: cada respuesta sale de las grabaciones test/fx-*.json.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { validate } from "../sdk/validate.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -60,4 +61,22 @@ test("resolve entrega un mp4 por https", async () => {
   const s = await run("fx-resolve.json", "resolve", "oushun-jogakuen-no-danyuu|1");
   assert.ok(s.url.startsWith("https://"));
   assert.equal(s.mime, "video/mp4");
+});
+
+test("las categorías son 24 fichas +18 y no incluyen géneros de menores", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "hentaila-cat-"));
+  const copy = join(dir, "plugin.mjs");
+  writeFileSync(copy, readFileSync(join(root, "plugin.js")));
+  const mod = await import(pathToFileURL(copy).href);
+  const tiles = await mod.categories();
+  assert.equal(tiles.length, 24);
+  assert.ok(tiles.every((t) => t.adult === true && t.title.length <= 40));
+  assert.ok(tiles.every((t) => !/shota|loli|petit/.test(t.ref)));
+});
+
+test("una categoría trae títulos y los géneros ocultos no traen ninguno", async () => {
+  const ok = await run("fx-cat.json", "browse", "g:vanilla");
+  assert.ok(itemsOf(ok).length > 0);
+  const no = await run("fx-shota.json", "browse", "g:shota");
+  assert.equal(itemsOf(no).length, 0);
 });
