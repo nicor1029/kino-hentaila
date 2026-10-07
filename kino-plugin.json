@@ -1,9 +1,10 @@
 {
   "id": "hentaila-es",
   "name": "Hentai sub español",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "apiVersion": 6,
   "entry": "plugin.js",
+  "icon": "icon.png",
   "description": "Hentai subtitulado al español de hentaila.com. Solo para mayores de 18 años: se ve con el código +18 de Kino desbloqueado. No pide cuenta ni configuración.",
   "author": "Nicor1029",
   "homepage": "https://github.com/Nicor1029/kino-hentaila",
@@ -30,6 +31,6 @@
   ],
   "signature": {
     "authorKey": "71573c60369c35254b365607723542f8014f016b99e6e4c334530ad3df066191",
-    "value": "7cf4f55649c971d28582ff3840243a5528bcb86838051832c3df540947ff2902054a91011ef52325b6d54648290dac522d87866c1b5f87bfd8fe9f7723751202"
+    "value": "739f3f2b58276e8c0b99258a8f0029c738a4f0cfe32d2dc45cf176de5fa2faf329d6469106f56aaf354ebd8ffd58467e73512cbdc93fff7cc7aa44470111550c"
   }
 }
