@@ -3,3 +3,4 @@
 .kino-storage.json
 .kino-secrets.json
 *.pem
+sdk/
