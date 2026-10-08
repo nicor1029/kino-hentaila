@@ -1,7 +1,7 @@
 {
   "id": "hentaila-es",
   "name": "Hentai sub español",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "apiVersion": 6,
   "entry": "plugin.js",
   "icon": "icon.png",
@@ -28,9 +28,5 @@
   "categories": [
     "anime",
     "adult"
-  ],
-  "signature": {
-    "authorKey": "71573c60369c35254b365607723542f8014f016b99e6e4c334530ad3df066191",
-    "value": "294bad3e88078bdeb25eff89384f08d064428753d9084b5563406cd8f6ce77f5faa0ab98c777b23206286c05b20d4d935f18293465f63a77e81832762bdb560f"
-  }
+  ]
 }
