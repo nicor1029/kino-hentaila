@@ -1,6 +1,5 @@
 const BASE = "https://hentaila.com";
 const UA = "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36";
-const BLOCKED_GENRES = ["shota", "loli", "petit"];
 const SERVERS = ["MP4Upload", "YourUpload"];
 const MAX_GENRE_PAGES = 20;
 
@@ -103,7 +102,7 @@ export async function home() {
 const CATEGORIES = [
   ["vanilla", "Vanilla"], ["romance", "Romance"], ["ecchi", "Ecchi"], ["softcore", "Softcore"],
   ["harem", "Harem"], ["yuri", "Yuri"], ["yaoi", "Yaoi"], ["futanari", "Futanari"],
-  ["3d", "3D"], ["milfs", "Milfs"], ["casadas", "Casadas"], ["maids", "Maids"],
+  ["3d", "3D"], ["milfs", "Milfs"], ["casadas", "Casadas"], ["maids", "Maids"],"shota", "Shota"], ["loli", "Loli"], ["petit", "Petit"]
   ["enfermeras", "Enfermeras"], ["teacher", "Teacher"], ["gal", "Gal"], ["elfas", "Elfas"],
   ["succubus", "Succubus"], ["tetonas", "Tetonas"], ["paizuri", "Paizuri"], ["threesome", "Threesome"],
   ["orgias", "Orgías"], ["hardcore", "Hardcore"], ["anal", "Anal"], ["bondage", "Bondage"],
