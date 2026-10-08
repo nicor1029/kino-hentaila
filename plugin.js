@@ -1,7 +1,9 @@
 const BASE = "https://hentaila.com";
 const UA = "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36";
+const BLOCKED_GENRES = ["shota", "loli", "petit"];
 const SERVERS = ["MP4Upload", "YourUpload"];
-const MAX_GENRE_PAGES = 20;
+// Kino allows 60 requests per call: 3 blocked genres x 15 pages, plus the catalog and the call's own page, stay under it.
+const MAX_GENRE_PAGES = 15;
 
 function decode(s) {
   return String(s || "").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#0?39;/g, "'")
@@ -37,6 +39,9 @@ function toItem(c) {
   return { id: safeId(c.slug), ref: c.slug, title: c.title, kind: "series", poster: c.poster, adult: true };
 }
 function pagesOf(html) {
+  // The site states its page count in the page data ("totalPages:5"); page 1 links to no other page.
+  const t = /totalPages:(\d+)/.exec(html);
+  if (t) return Math.max(1, Number(t[1]));
   let max = 1;
   const re = /[?&]page=(\d+)/g;
   let m;
@@ -62,7 +67,7 @@ async function genreSlugs(genre, baseKey) {
   }
   return slugs;
 }
-async function blockedSet() {
+async function blockedSet(baseText) {
   let slugs = null;
   try {
     const c = await kino.storage.get("blk:v3");
@@ -73,7 +78,7 @@ async function blockedSet() {
     }
   } catch (e) {}
   if (!slugs) {
-    const baseHtml = await getText(BASE + "/catalogo");
+    const baseHtml = await (baseText || getText(BASE + "/catalogo"));
     const baseKey = parseCards(baseHtml).map((c) => c.slug).sort().join(",");
     const lists = await Promise.all(BLOCKED_GENRES.map((g) => genreSlugs(g, baseKey)));
     slugs = [].concat(...lists);
@@ -94,7 +99,8 @@ export async function search(query) {
 }
 
 export async function home() {
-  const [html, blk] = await Promise.all([getText(BASE + "/catalogo"), blockedSet()]);
+  const catalog = getText(BASE + "/catalogo");
+  const [html, blk] = await Promise.all([catalog, blockedSet(catalog)]);
   const items = parseCards(html).filter((c) => !blk[c.slug]).map(toItem);
   return [{ id: "nuevos", title: "Recién agregados", ref: "nuevos", items: items }];
 }
@@ -102,7 +108,7 @@ export async function home() {
 const CATEGORIES = [
   ["vanilla", "Vanilla"], ["romance", "Romance"], ["ecchi", "Ecchi"], ["softcore", "Softcore"],
   ["harem", "Harem"], ["yuri", "Yuri"], ["yaoi", "Yaoi"], ["futanari", "Futanari"],
-  ["3d", "3D"], ["milfs", "Milfs"], ["casadas", "Casadas"], ["maids", "Maids"],["shota", "Shota"],["loli", "Loli"],["petit","Petit]],
+  ["3d", "3D"], ["milfs", "Milfs"], ["casadas", "Casadas"], ["maids", "Maids"],
   ["enfermeras", "Enfermeras"], ["teacher", "Teacher"], ["gal", "Gal"], ["elfas", "Elfas"],
   ["succubus", "Succubus"], ["tetonas", "Tetonas"], ["paizuri", "Paizuri"], ["threesome", "Threesome"],
   ["orgias", "Orgías"], ["hardcore", "Hardcore"], ["anal", "Anal"], ["bondage", "Bondage"],
@@ -118,7 +124,7 @@ export async function browse(ref, cursor) {
   const url = genre ? BASE + "/catalogo?genre=" + genre + "&page=" + page : BASE + "/catalogo?page=" + page;
   const [html, blk] = await Promise.all([getText(url), blockedSet()]);
   const items = parseCards(html).filter((c) => !blk[c.slug]).map(toItem);
-  const more = new RegExp("[?&]page=" + (page + 1) + "(?!\\d)").test(html);
+  const more = page < pagesOf(html);
   return more ? { items: items, next: String(page + 1) } : { items: items };
 }
 
