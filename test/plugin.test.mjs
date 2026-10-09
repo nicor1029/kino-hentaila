@@ -63,15 +63,23 @@ test("resolve entrega un mp4 por https", async () => {
   assert.equal(s.mime, "video/mp4");
 });
 
-test("las categorías son 24 fichas +18 y no incluyen géneros de menores", async () => {
+test("las categorías son 24 fichas +18, con imagen y sin géneros de menores", async () => {
   const dir = mkdtempSync(join(tmpdir(), "hentaila-cat-"));
   const copy = join(dir, "plugin.mjs");
   writeFileSync(copy, readFileSync(join(root, "plugin.js")));
+  const card = '<h3 class="x">Ejemplo</h3><a href="/media/ejemplo-uno"></a><img src="https://cdn.hentaila.com/covers/1.jpg">';
+  globalThis.kino = {
+    fetch: async () => ({ ok: true, status: 200, text: async () => card }),
+    storage: { get: async () => { throw new Error("vacío"); }, set: async () => ({}) },
+    log: () => {},
+    error: (code, msg) => new Error(code + ": " + msg),
+  };
   const mod = await import(pathToFileURL(copy).href);
   const tiles = await mod.categories();
   assert.equal(tiles.length, 24);
-  assert.ok(tiles.every((t) => t.adult === true && t.title.length <= 40));
-  assert.ok(tiles.every((t) => !/shota|loli|petit/.test(t.ref)));
+  assert.ok(tiles.every((x) => x.adult === true && x.title.length <= 40));
+  assert.ok(tiles.every((x) => x.art === "https://cdn.hentaila.com/covers/1.jpg"));
+  assert.ok(tiles.every((x) => !/shota|loli|petit/.test(x.ref)));
 });
 
 test("una categoría trae títulos y los géneros ocultos no traen ninguno", async () => {

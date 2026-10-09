@@ -113,8 +113,47 @@ const CATEGORIES = [
   ["succubus", "Succubus"], ["tetonas", "Tetonas"], ["paizuri", "Paizuri"], ["threesome", "Threesome"],
   ["orgias", "Orgías"], ["hardcore", "Hardcore"], ["anal", "Anal"], ["bondage", "Bondage"],
 ];
+const ART_KEY = "art:v1";
+async function readArt() {
+  try {
+    const c = await kino.storage.get(ART_KEY);
+    const raw = c && typeof c === "object" && "value" in c ? c.value : c;
+    if (typeof raw === "string") {
+      const o = JSON.parse(raw);
+      if (o && typeof o === "object") return o;
+    }
+  } catch (e) {}
+  return null;
+}
+async function genreArt(genre, blk) {
+  try {
+    const html = await getText(BASE + "/catalogo?genre=" + genre);
+    const first = parseCards(html).find((c) => c.poster && !blk[c.slug]);
+    return first ? first.poster : "";
+  } catch (e) {
+    log("arte " + genre);
+    return "";
+  }
+}
 export async function categories() {
-  return CATEGORIES.map((c) => ({ id: "g-" + c[0], title: c[1], ref: "g:" + c[0], adult: true }));
+  let art = await readArt();
+  if (!art) {
+    const blk = await blockedSet();
+    art = {};
+    for (let i = 0; i < CATEGORIES.length; i += 6) {
+      const batch = CATEGORIES.slice(i, i + 6);
+      const posters = await Promise.all(batch.map((c) => genreArt(c[0], blk)));
+      batch.forEach((c, k) => { if (posters[k]) art[c[0]] = posters[k]; });
+    }
+    if (Object.keys(art).length) {
+      try { await kino.storage.set(ART_KEY, JSON.stringify(art), { ttlMs: 6 * 3600 * 1000 }); } catch (e) {}
+    }
+  }
+  return CATEGORIES.map((c) => {
+    const tile = { id: "g-" + c[0], title: c[1], ref: "g:" + c[0], adult: true };
+    if (art[c[0]]) tile.art = art[c[0]];
+    return tile;
+  });
 }
 
 export async function browse(ref, cursor) {
