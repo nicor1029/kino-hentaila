@@ -167,6 +167,41 @@ export async function browse(ref, cursor) {
   return more ? { items: items, next: String(page + 1) } : { items: items };
 }
 
+const SECTION_TABS = [
+  { id: "novedades", label: "Novedades" },
+  { id: "generos1", label: "Géneros" },
+  { id: "generos2", label: "Más géneros" },
+];
+
+async function rowFor(path, id, title, ref, blk) {
+  try {
+    const html = await getText(BASE + path);
+    const items = parseCards(html).filter((c) => !blk[c.slug]).slice(0, 24).map(toItem);
+    return items.length ? { id: id, title: title, ref: ref, items: items } : null;
+  } catch (e) {
+    log("fila " + id);
+    return null;
+  }
+}
+
+export async function section(arg) {
+  const want = arg && arg.tab;
+  const tab = SECTION_TABS.some((t) => t.id === want) ? want : "novedades";
+  const blk = await blockedSet();
+  let rows = [];
+  if (tab === "novedades") {
+    rows = [await rowFor("/catalogo", "nuevos", "Recién agregados", "nuevos", blk)];
+  } else {
+    const list = tab === "generos1" ? CATEGORIES.slice(0, 12) : CATEGORIES.slice(12);
+    for (let i = 0; i < list.length; i += 6) {
+      const batch = list.slice(i, i + 6);
+      const got = await Promise.all(batch.map((g) => rowFor("/catalogo?genre=" + g[0], "g-" + g[0], g[1], "g:" + g[0], blk)));
+      rows = rows.concat(got);
+    }
+  }
+  return { tabs: SECTION_TABS, tab: tab, rows: rows.filter(Boolean) };
+}
+
 export async function episodes(ref) {
   const slug = String(ref);
   const html = await getText(BASE + "/media/" + encodeURIComponent(slug));

@@ -88,3 +88,26 @@ test("una categoría trae títulos y los géneros ocultos no traen ninguno", asy
   const no = await run("fx-shota.json", "browse", "g:shota");
   assert.equal(itemsOf(no).length, 0);
 });
+
+test("la sección trae tres pestañas, filas con Ver más y todo +18", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "hentaila-sec-"));
+  const copy = join(dir, "plugin.mjs");
+  writeFileSync(copy, readFileSync(join(root, "plugin.js")));
+  const card = '<h3 class="x">Ejemplo</h3><a href="/media/ejemplo-uno"></a><img src="https://cdn.hentaila.com/covers/1.jpg">';
+  globalThis.kino = {
+    fetch: async () => ({ ok: true, status: 200, text: async () => card }),
+    storage: { get: async () => { throw new Error("vacío"); }, set: async () => ({}) },
+    log: () => {},
+    error: (code, msg) => new Error(code + ": " + msg),
+  };
+  const mod = await import(pathToFileURL(copy).href);
+  const a = await mod.section({ tab: null });
+  assert.equal(a.tab, "novedades");
+  assert.equal(a.tabs.length, 3);
+  assert.equal(a.rows.length, 1);
+  const g1 = await mod.section({ tab: "generos1" });
+  assert.equal(g1.rows.length, 12);
+  const g2 = await mod.section({ tab: "generos2" });
+  assert.equal(g2.rows.length, 12);
+  assert.ok([a, g1, g2].every((x) => x.rows.every((r) => r.ref && r.items.length > 0 && r.items.every((i) => i.adult === true))));
+});
