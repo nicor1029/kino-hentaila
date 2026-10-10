@@ -98,11 +98,45 @@ export async function search(query) {
   return parseCards(html).filter((c) => !blk[c.slug]).slice(0, 100).map(toItem);
 }
 
+function parseRecent(html) {
+  const start = html.indexOf(">Episodios<");
+  if (start < 0) return [];
+  const out = [];
+  const seen = {};
+  const parts = html.slice(start).split("<article");
+  for (let i = 1; i < parts.length; i++) {
+    const c = parts[i];
+    const h = c.match(/href="\/media\/([a-z0-9-]+)\/(\d+)"/);
+    const t = c.match(/text-subs font-bold uppercase">([^<]+)</);
+    if (!h || !t || seen[h[1]]) continue;
+    const img = c.match(/src="(https:\/\/cdn\.hentaila\.com\/[^"]+)"/);
+    seen[h[1]] = 1;
+    out.push({ slug: h[1], title: decode(t[1]).trim(), poster: img ? img[1] : "", ep: h[2] });
+  }
+  return out;
+}
+function toRecentItem(c) {
+  return { id: safeId(c.slug), ref: c.slug, title: c.title, kind: "series", poster: c.poster, adult: true, badges: ["Ep " + c.ep] };
+}
+async function recentRow(blk) {
+  try {
+    const items = parseRecent(await getText(BASE + "/hub")).filter((c) => !blk[c.slug]).slice(0, 30).map(toRecentItem);
+    return items.length ? { id: "recientes", title: "Recién agregados", items: items } : null;
+  } catch (e) {
+    log("recientes");
+    return null;
+  }
+}
+
 export async function home() {
   const catalog = getText(BASE + "/catalogo");
   const [html, blk] = await Promise.all([catalog, blockedSet(catalog)]);
+  const rows = [];
+  const recent = await recentRow(blk);
+  if (recent) rows.push(recent);
   const items = parseCards(html).filter((c) => !blk[c.slug]).map(toItem);
-  return [{ id: "nuevos", title: "Recién agregados", ref: "nuevos", items: items }];
+  if (items.length) rows.push({ id: "nuevos", title: "Catálogo", ref: "nuevos", items: items });
+  return rows;
 }
 
 const CATEGORIES = [
@@ -190,7 +224,7 @@ export async function section(arg) {
   const blk = await blockedSet();
   let rows = [];
   if (tab === "novedades") {
-    rows = [await rowFor("/catalogo", "nuevos", "Recién agregados", "nuevos", blk)];
+    rows = [await recentRow(blk), await rowFor("/catalogo", "nuevos", "Catálogo", "nuevos", blk)];
   } else {
     const list = tab === "generos1" ? CATEGORIES.slice(0, 12) : CATEGORIES.slice(12);
     for (let i = 0; i < list.length; i += 6) {

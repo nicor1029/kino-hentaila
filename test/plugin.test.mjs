@@ -111,3 +111,26 @@ test("la sección trae tres pestañas, filas con Ver más y todo +18", async () 
   assert.equal(g2.rows.length, 12);
   assert.ok([a, g1, g2].every((x) => x.rows.every((r) => r.ref && r.items.length > 0 && r.items.every((i) => i.adult === true))));
 });
+
+test("el inicio trae primero los capítulos recientes y luego el catálogo", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "hentaila-rec-"));
+  const copy = join(dir, "plugin.mjs");
+  writeFileSync(copy, readFileSync(join(root, "plugin.js")));
+  const card = '<h3 class="x">Ejemplo</h3><a href="/media/ejemplo-uno"></a><img src="https://cdn.hentaila.com/covers/1.jpg">';
+  const art = (img, name, slug, ep) => '<article><img src="https://cdn.hentaila.com/thumbnails/' + img + '.jpg"><div class="text-2xs text-subs font-bold uppercase">' + name + '</div><a href="/media/' + slug + '/' + ep + '"></a></article>';
+  const hub = '<h2>Episodios</h2>' + art(1, "Serie Uno", "serie-uno", 5) + art(2, "Serie Uno", "serie-uno", 4) + art(3, "Serie Dos", "serie-dos", 2);
+  globalThis.kino = {
+    fetch: async (url) => ({ ok: true, status: 200, text: async () => (String(url).indexOf("/hub") >= 0 ? hub : card) }),
+    storage: { get: async () => { throw new Error("vacío"); }, set: async () => ({}) },
+    log: () => {},
+    error: (code, msg) => new Error(code + ": " + msg),
+  };
+  const mod = await import(pathToFileURL(copy).href);
+  const rows = await mod.home();
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].id, "recientes");
+  assert.equal(rows[0].items.length, 2);
+  assert.equal(rows[0].items[0].title, "Serie Uno");
+  assert.deepEqual(rows[0].items[0].badges, ["Ep 5"]);
+  assert.equal(rows[1].id, "nuevos");
+});
